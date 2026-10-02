@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TCC FacilityTrack</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+    body {
+      background: #f1f5f9;
+      color: #1e293b;
+    }
+    /* SIDEBAR */
+    .sidebar {
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 245px;
+      height: 100vh;
+      background: linear-gradient(180deg, #0f172a, #172554);
+      color: white;
+      padding: 25px 15px;
+    }
+    .logo {
+      text-align: center;
+      margin-bottom: 35px;
+    }
+    .logo .icon {
+      font-size: 42px;
+    }
+    .logo h2 {
+      margin-top: 8px;
+      color: #38bdf8;
+    }
+    .logo p {
+      font-size: 11px;
+      color: #cbd5e1;
+    }
+    .menu button {
+      width: 100%;
+      padding: 14px;
+      margin: 5px 0;
+      border: none;
+      border-radius: 10px;
+      background: transparent;
+      color: white;
+      text-align: left;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .menu button:hover,
+    .menu button.active {
+      background: #0284c7;
+    }
+    /* MAIN */
+    .main {
+      margin-left: 245px;
+      padding: 25px;
+    }
+    .topbar {
+      background: white;
+      padding: 20px 25px;
+      border-radius: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, .06);
+      margin-bottom: 25px;
+    }
+    .topbar h1 {
+      color: #0f172a;
+    }
+    .user {
+      background: #e0f2fe;
+      color: #0369a1;
+      padding: 10px 15px;
+      border-radius: 20px;
+      font-size: 13px;
+    }
+    /* PAGES */
+    .page {
+      display: none;
+    }
+    .page.active {
+      display: block;
+    }
+    /* CARDS */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+      margin-bottom: 25px;
+    }
+    .card {
+      background: white;
+      padding: 22px;
+      border-radius: 15px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, .06);
+    }
+    .card .number {
+      font-size: 30px;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+    .card.blue {
+      border-left: 5px solid #0284c7;
+    }
+    .card.green {
+      border-left: 5px solid #16a34a;
+    }
+    .card.orange {
+      border-left: 5px solid #f97316;
+    }
+    .card.red {
+      border-left: 5px solid #dc2626;
+    }
+    /* CONTENT */
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    .panel {
+      background: white;
+      padding: 25px;
+      border-radius: 15px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, .06);
+      margin-bottom: 20px;
+    }
+    .panel h2 {
+      margin-bottom: 20px;
+      color: #0f172a;
+    }
+    /* TABLE */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 13px;
+      border-bottom: 1px solid #e2e8f0;
+      text-align: left;
+      font-size: 14px;
+    }
+    th {
+      background: #f8fafc;
+      color: #475569;
+    }
+    .badge {
+      padding: 5px 10px;
+      border-radius: 15px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+    .high {
+      background: #fee2e2;
+      color: #b91c1c;
+    }
+    .medium {
+      background: #ffedd5;
+      color: #c2410c;
+    }
+    .low {
+      background: #dcfce7;
+      color: #15803d;
+    }
+    .resolved {
+      background: #dcfce7;
+      color: #15803d;
+    }
+    .pending {
+      background: #fef3c7;
+      color: #a16207;
+    }
+    /* FORMS */
+    .form-group {
+      margin-bottom: 18px;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 7px;
+      font-weight: bold;
+      font-size: 14px;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      outline: none;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: #0284c7;
+    }
+    textarea {
+      height: 100px;
+    }
+    .btn {
+      border: none;
+      padding: 12px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .btn-primary {
+      background: #0284c7;
+      color: white;
+    }
+    .btn-primary:hover {
+      background: #0369a1;
+    }
+    .btn-success {
+      background: #16a34a;
+      color: white;
+    }
+    /* RATING */
+    .rating {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .rating label {
+      background: #f1f5f9;
+      padding: 12px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .rating input {
+      width: auto;
+    }
+    /* PROGRESS */
+    .progress {
+      height: 10px;
+      background: #e2e8f0;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #0284c7, #38bdf8);
+    }
+    /* BAR CHART */
+    .chart {
+      display: flex;
+      align-items: end;
+      justify-content: space-around;
+      height: 230px;
+      padding: 20px 5px;
+      border-bottom: 1px solid #cbd5e1;
+    }
+    .bar-container {
+      text-align: center;
+      width: 18%;
+    }
+    .bar {
+      width: 100%;
+      background: linear-gradient(180deg, #38bdf8, #0284c7);
+      border-radius: 7px 7px 0 0;
+      min-height: 10px;
+    }
+    .bar-label {
+      font-size: 11px;
+      margin-top: 8px;
+    }
+    /* NOTIFICATION */
+    .notification {
+      position: fixed;
+      right: 25px;
+      bottom: 25px;
+      background: #0f172a;
+      color: white;
+      padding: 16px 20px;
+      border-radius: 10px;
+      display: none;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, .25);
+    }
+    /* FOOTER */
+    .footer {
+      text-align: center;
+      padding: 25px;
+      color: #64748b;
+      font-size: 12px;
+    }
+    /* RESPONSIVE */
+    @media (max-width: 900px) {
+      .sidebar {
+        width: 190px;
+      }
+      .main {
+        margin-left: 190px;
+      }
+      .cards {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    @media (max-width: 650px) {
+      .sidebar {
+        position: relative;
+        width: 100%;
+        height: auto;
+      }
+      .main {
+        margin-left: 0;
+      }
+      .cards {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="logo">
+      <div class="icon">🏫</div>
+      <h2>FacilityTrack</h2>
+      <p>Talisay City College</p>
+    </div>
+    <div class="menu">
+      <button class="active" onclick="showPage('dashboard', this)">📊 Dashboard</button>
+      <button onclick="showPage('assessment', this)">📝 Facility Assessment</button>
+      <button onclick="showPage('report', this)">🚨 Report Concern</button>
+      <button onclick="showPage('facilities', this)">🏫 Facilities</button>
+      <button onclick="showPage('monitoring', this)">🔧 Concern Monitoring</button>
+      <button onclick="showPage('reports', this)">📄 Reports</button>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div>
+        <h1 id="pageTitle">Facility Dashboard</h1>
+        <p style="color:#64748b;font-size:13px;margin-top:5px;">
+          School Facilities Assessment and Monitoring System
+        </p>
+      </div>
+      <div class="user">👤 Administrator</div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <section id="dashboard" class="page active">
+      <div class="cards">
+        <div class="card blue">
+          <div>🏫 Total Facilities</div>
+          <div class="number">12</div>
+          <small>Registered facilities</small>
+        </div>
+        <div class="card green">
+          <div>📝 Assessments</div>
+          <div class="number" id="assessmentCount">156</div>
+          <small>Student assessments</small>
+        </div>
+        <div class="card orange">
+          <div>⚠ Open Concerns</div>
+          <div class="number" id="concernCount">8</div>
+          <small>Needs attention</small>
+        </div>
+        <div class="card red">
+          <div>🚨 High Priority</div>
+          <div class="number">3</div>
+          <small>Priority concerns</small>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="panel">
+          <h2>📊 Facility Assessment Results</h2>
+          <div class="chart">
+            <div class="bar-container">
+              <div class="bar" style="height:170px"></div>
+              <div class="bar-label">Classrooms</div>
+            </div>
+            <div class="bar-container">
+              <div class="bar" style="height:125px"></div>
+              <div class="bar-label">Computer Lab</div>
+            </div>
+            <div class="bar-container">
+              <div class="bar" style="height:105px"></div>
+              <div class="bar-label">Internet</div>
+            </div>
+            <div class="bar-container">
+              <div class="bar" style="height:155px"></div>
+              <div class="bar-label">Library</div>
+            </div>
+            <div class="bar-container">
+              <div class="bar" style="height:145px"></div>
+              <div class="bar-label">Furniture</div>
+            </div>
+          </div>
+          <p style="margin-top:15px;color:#64748b;font-size:13px;">
+            Sample visualization. Replace with actual research results.
+          </p>
+        </div>
+
+        <div class="panel">
+          <h2>🎯 Facility Status</h2>
+          <p style="margin-bottom:5px;">Computer Laboratory</p>
+          <div class="progress">
+            <div class="progress-bar" style="width:65%"></div>
+          </div>
+          <p style="margin:20px 0 5px;">Internet Connectivity</p>
+          <div class="progress">
+            <div class="progress-bar" style="width:52%"></div>
+          </div>
+          <p style="margin:20px 0 5px;">Classrooms</p>
+          <div class="progress">
+            <div class="progress-bar" style="width:82%"></div>
+          </div>
+          <p style="margin:20px 0 5px;">Library</p>
+          <div class="progress">
+            <div class="progress-bar" style="width:88%"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>🚨 Recent Facility Concerns</h2>
+        <table>
+          <tr>
+            <th>Facility</th>
+            <th>Concern</th>
+            <th>Priority</th>
+            <th>Status</th>
+          </tr>
+          <tr>
+            <td>Computer Laboratory 1</td>
+            <td>Non-functional computers</td>
+            <td><span class="badge high">High</span></td>
+            <td><span class="badge pending">For Action</span></td>
+          </tr>
+          <tr>
+            <td>Internet/Wi-Fi</td>
+            <td>Slow connection</td>
+            <td><span class="badge high">High</span></td>
+            <td><span class="badge pending">Under Review</span></td>
+          </tr>
+          <tr>
+            <td>Classroom 204</td>
+            <td>Broken chairs</td>
+            <td><span class="badge medium">Medium</span></td>
+            <td><span class="badge resolved">Resolved</span></td>
+          </tr>
+        </table>
+      </div>
+    </section>
+
+    <!-- ASSESSMENT -->
+    <section id="assessment" class="page">
+      <div class="panel">
+        <h2>📝 Student Facility Assessment</h2>
+        <p style="color:#64748b;margin-bottom:25px;">
+          Please rate the selected school facility based on your actual experience.
+        </p>
+
+        <div class="form-group">
+          <label>Select Facility</label>
+          <select id="assessmentFacility">
+            <option>Computer Laboratory</option>
+            <option>Classroom</option>
+            <option>Internet / Wi-Fi</option>
+            <option>Library</option>
+            <option>Furniture</option>
+            <option>Comfort Room</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>How would you rate this facility?</label>
+          <div class="rating">
+            <label><input type="radio" name="rating" value="1"> ⭐ 1 - Very Poor</label>
+            <label><input type="radio" name="rating" value="2"> ⭐⭐ 2 - Poor</label>
+            <label><input type="radio" name="rating" value="3"> ⭐⭐⭐ 3 - Fair</label>
+            <label><input type="radio" name="rating" value="4"> ⭐⭐⭐⭐ 4 - Good</label>
+            <label><input type="radio" name="rating" value="5"> ⭐⭐⭐⭐⭐ 5 - Excellent</label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Additional Comments</label>
+          <textarea id="assessmentComment" placeholder="Enter your comments or suggestions..."></textarea>
+        </div>
+
+        <button class="btn btn-primary" onclick="submitAssessment()">Submit Assessment</button>
+      </div>
+    </section>
+
+    <!-- REPORT CONCERN -->
+    <section id="report" class="page">
+      <div class="panel">
+        <h2>🚨 Report Facility Concern</h2>
+        <p style="color:#64748b;margin-bottom:25px;">
+          Report a facility problem that may affect students' learning experience.
+        </p>
+
+        <div class="form-group">
+          <label>Facility</label>
+          <select id="reportFacility">
+            <option>Computer Laboratory 1</option>
+            <option>Computer Laboratory 2</option>
+            <option>Classroom 101</option>
+            <option>Classroom 204</option>
+            <option>Internet / Wi-Fi</option>
+            <option>Library</option>
+            <option>Comfort Room</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Concern Type</label>
+          <select id="concernType">
+            <option>Damaged Equipment</option>
+            <option>Internet Connectivity</option>
+            <option>Furniture</option>
+            <option>Cleanliness</option>
+            <option>Electrical Problem</option>
+            <option>Other</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Description</label>
+          <textarea id="concernDescription" placeholder="Describe the facility concern..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Suggested Priority</label>
+          <select id="priority">
+            <option>High</option>
+            <option>Medium</option>
+            <option>Low</option>
+          </select>
+        </div>
+
+        <button class="btn btn-primary" onclick="submitConcern()">Submit Concern</button>
+      </div>
+    </section>
+
+    <!-- FACILITIES -->
+    <section id="facilities" class="page">
+      <div class="panel">
+        <h2>🏫 School Facilities</h2>
+        <table>
+          <tr>
+            <th>Facility</th>
+            <th>Category</th>
+            <th>Condition</th>
+            <th>Status</th>
+          </tr>
+          <tr>
+            <td>Computer Laboratory 1</td>
+            <td>IT Laboratory</td>
+            <td>Good</td>
+            <td><span class="badge low">Operational</span></td>
+          </tr>
+          <tr>
+            <td>Computer Laboratory 2</td>
+            <td>IT Laboratory</td>
+            <td>Needs Attention</td>
+            <td><span class="badge medium">Monitoring</span></td>
+          </tr>
+          <tr>
+            <td>Library</td>
+            <td>Learning Resource</td>
+            <td>Good</td>
+            <td><span class="badge low">Operational</span></td>
+          </tr>
+          <tr>
+            <td>Internet / Wi-Fi</td>
+            <td>Technology</td>
+            <td>Needs Improvement</td>
+            <td><span class="badge high">Attention</span></td>
+          </tr>
+          <tr>
+            <td>Classrooms</td>
+            <td>Learning Space</td>
+            <td>Good</td>
+            <td><span class="badge low">Operational</span></td>
+          </tr>
+        </table>
+      </div>
+    </section>
+
+    <!-- MONITORING -->
+    <section id="monitoring" class="page">
+      <div class="panel">
+        <h2>🔧 Facility Concern Monitoring</h2>
+        <table>
+          <tr>
+            <th>ID</th>
+            <th>Facility</th>
+            <th>Concern</th>
+            <th>Priority</th>
+            <th>Status</th>
+          </tr>
+          <tr>
+            <td>#001</td>
+            <td>Computer Laboratory 1</td>
+            <td>Non-functional computers</td>
+            <td><span class="badge high">High</span></td>
+            <td>
+              <select>
+                <option>For Action</option>
+                <option>Under Review</option>
+                <option>In Progress</option>
+                <option>Resolved</option>
+              </select>
+            </td>
+          </tr>
+          <tr>
+            <td>#002</td>
+            <td>Internet/Wi-Fi</td>
+            <td>Slow connection</td>
+            <td><span class="badge high">High</span></td>
+            <td>
+              <select>
+                <option>Under Review</option>
+                <option>For Action</option>
+                <option>In Progress</option>
+                <option>Resolved</option>
+              </select>
+            </td>
+          </tr>
+          <tr>
+            <td>#003</td>
+            <td>Classroom 204</td>
+            <td>Broken chairs</td>
+            <td><span class="badge medium">Medium</span></td>
+            <td>
+              <select>
+                <option>Resolved</option>
+                <option>For Action</option>
+                <option>In Progress</option>
+              </select>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </section>
+
+    <!-- REPORTS -->
+    <section id="reports" class="page">
+      <div class="panel">
+        <h2>📄 Facility Reports</h2>
+        <p style="color:#64748b;margin-bottom:20px;">
+          Sample reports that can be generated by the system.
+        </p>
+        <table>
+          <tr>
+            <th>Report</th>
+            <th>Description</th>
+            <th>Action</th>
+          </tr>
+          <tr>
+            <td>Facility Assessment Summary</td>
+            <td>Summary of student facility ratings</td>
+            <td>
+              <button class="btn btn-primary" onclick="generateReport('Assessment')">View</button>
+            </td>
+          </tr>
+          <tr>
+            <td>Facility Concern Report</td>
+            <td>List of reported facility concerns</td>
+            <td>
+              <button class="btn btn-primary" onclick="generateReport('Concern')">View</button>
+            </td>
+          </tr>
+          <tr>
+            <td>Priority Facility Report</td>
+            <td>Facilities requiring attention</td>
+            <td>
+              <button class="btn btn-primary" onclick="generateReport('Priority')">View</button>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </section>
+
+    <div class="footer">
+      TCC FacilityTrack © 2026 | Proposed IT Research Output | Talisay City College
+    </div>
+  </div>
+
+  <div id="notification" class="notification">Action completed successfully!</div>
+
+  <script>
+    /* PAGE NAVIGATION */
+    function showPage(page, button) {
+      document.querySelectorAll('.page').forEach(function (p) {
+        p.classList.remove('active');
+      });
+      document.getElementById(page).classList.add('active');
+      document.querySelectorAll('.menu button').forEach(function (b) {
+        b.classList.remove('active');
+      });
+      button.classList.add('active');
+      const titles = {
+        dashboard: "Facility Dashboard",
+        assessment: "Student Facility Assessment",
+        report: "Report Facility Concern",
+        facilities: "School Facilities",
+        monitoring: "Concern Monitoring",
+        reports: "Facility Reports"
+      };
+      document.getElementById("pageTitle").innerText = titles[page];
+    }
+
+    /* NOTIFICATION */
+    function notify(message) {
+      const notification = document.getElementById("notification");
+      notification.innerText = message;
+      notification.style.display = "block";
+      setTimeout(function () {
+        notification.style.display = "none";
+      }, 3000);
+    }
+
+    /* ASSESSMENT */
+    function submitAssessment() {
+      const facility = document.getElementById("assessmentFacility").value;
+      const rating = document.querySelector('input[name="rating"]:checked');
+      if (!rating) {
+        alert("Please select a rating.");
+        return;
+      }
+      const comment = document.getElementById("assessmentComment").value;
+      notify("Assessment submitted for " + facility + " (" + rating.value + "/5)");
+      document.getElementById("assessmentComment").value = "";
+    }
+
+    /* CONCERN */
+    function submitConcern() {
+      const facility = document.getElementById("reportFacility").value;
+      const type = document.getElementById("concernType").value;
+      const priority = document.getElementById("priority").value;
+      const description = document.getElementById("concernDescription").value;
+      if (description.trim() === "") {
+        alert("Please describe the facility concern.");
+        return;
+      }
+      let count = parseInt(document.getElementById("concernCount").innerText);
+      count++;
+      document.getElementById("concernCount").innerText = count;
+      notify("Concern submitted: " + facility + " | " + type + " | " + priority + " Priority");
+      document.getElementById("concernDescription").value = "";
+    }
+
+    /* REPORT */
+    function generateReport(type) {
+      alert(
+        "Sample " + type + " Report\n\n" +
+        "This prototype demonstrates how the final system can generate and present reports based on actual database records."
+      );
+    }
+  </script>
+</body>
+</html>
