@@ -73,8 +73,26 @@ npm run build      # typechecks, then bundles to dist/
 npm run preview    # serve the production build locally
 ```
 
-Deploy `dist/` to any static host (Vercel, Netlify, Cloudflare Pages, GitHub
-Pages). Add a rewrite to `index.html` so client-side routes resolve on refresh:
+### Vercel (automatic via GitHub Actions)
+
+This repo includes a CI/CD pipeline (`.github/workflows/deploy.yml`) that:
+
+- Runs lint, typecheck (`tsc --noEmit`), and build on every push/PR
+- Deploys **preview** on pull requests
+- Deploys **production** to `main`
+
+Required GitHub Secrets (Settings → Secrets and variables → Actions):
+- `VERCEL_TOKEN` – create from [Vercel Settings > Tokens](https://vercel.com/account/tokens)
+- `VERCEL_ORG_ID` – from `vercel org ls` or Vercel Project Settings
+- `VERCEL_PROJECT_ID` – from Vercel Project Settings
+- `VITE_SUPABASE_URL` – your Supabase URL
+- `VITE_SUPABASE_ANON_KEY` – your Supabase anon key
+
+The workflow uses `vercel deploy --prebuilt` (build happens in CI). `vercel.json` includes a SPA rewrite to `index.html` for client-side routes.
+
+### Manual deploy to any static host
+
+Deploy `dist/` to any static host (Vercel, Netlify, Cloudflare Pages, GitHub Pages). Add a rewrite to `index.html` so client-side routes resolve on refresh:
 
 ```
 /*  /index.html  200
