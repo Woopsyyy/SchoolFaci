@@ -5,15 +5,16 @@ import path from 'node:path'
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  // Bind 0.0.0.0, not 127.0.0.1: WSL2's localhost forwarding is unreliable, and
-  // Windows browsers need the WSL IP (printed on startup) to reach the dev server.
+  // Bind on all interfaces so Windows can reach Vite through WSL2 port forwarding.
   server: {
-    host: true,
-    strictPort: true,
+    host: '0.0.0.0',
+    port: 5173,
+    strictPort: false,
   },
   preview: {
     host: true,
-    strictPort: true,
+    port: 5173,
+    strictPort: false,
   },
   resolve: {
     alias: {

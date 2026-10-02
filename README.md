@@ -51,6 +51,17 @@ cp .env.example .env.local     # already filled in for this project
 npm run dev
 ```
 
+From a browser on Windows, open **http://127.0.0.1:5173**. The dev server binds
+to `0.0.0.0` so WSL2 can forward the port. If the address does not open, check
+the URL Vite prints in the terminal and try the WSL IP instead:
+
+```bash
+hostname -I
+```
+
+Use the first address shown as `http://<WSL-IP>:5173`. If Vite reports a
+different port because 5173 is already in use, use that port in the URL.
+
 `.env.local` is gitignored. The publishable key is designed to be public and is
 protected by Row Level Security in Postgres, which is why the RPCs verify the
 admin passphrase rather than trusting the client.

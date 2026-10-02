@@ -12,11 +12,17 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import {
+  BarChart3,
+  ClipboardList,
   Download,
   FileSpreadsheet,
+  Flame,
   Printer,
+  RefreshCw,
+  Sparkles,
   Target,
   TrendingDown,
+  Wrench,
 } from 'lucide-react'
 import {
   Bar,
@@ -30,6 +36,7 @@ import {
 } from 'recharts'
 import { downloadCsv, timestampSlug } from '@/lib/csv'
 import { formatDate, priorityClasses, ratingText } from '@/lib/format'
+import { getFacilityCategoryIcon, getPriorityIcon, getStatusIcon } from '@/lib/icons'
 import { supabase } from '@/lib/supabase'
 import type {
   Concern,
@@ -45,15 +52,15 @@ type Props = {
 }
 
 const RECOMMENDATION: Record<string, string> = {
-  High: 'Immediate action: assign a maintenance team and set a target resolution date.',
-  Moderate: 'Schedule repair within the current term and include in the next budget cycle.',
-  Low: 'Routine maintenance. Re-assess next term to confirm the condition is stable.',
+  High: 'Immediate action: dispatch maintenance unit, allocate urgent repair budget.',
+  Moderate: 'Schedule maintenance within the current term; procure required hardware.',
+  Low: 'Routine periodic check. Re-assess next cycle to confirm condition stability.',
 }
 
 const GENERATED_ON = new Date().toISOString()
 
-export default function Reports({ resetKey }: Props) {
-  const { data, loading, error } = useAsync(
+export default function Reports({ resetKey, forceReset }: Props) {
+  const { data, loading, error, reload } = useAsync(
     async () => {
       const [priorityRes, dimRes, concernRes] = await Promise.all([
         supabase.from('v_facility_priority').select('*'),
@@ -112,9 +119,9 @@ export default function Reports({ resetKey }: Props) {
   )
 
   const totals = useMemo(() => {
-    const all = data.priority.flatMap((p) => [
-      p.avg_overall_rating ?? 0,
-    ]).filter((v) => v > 0)
+    const all = data.priority
+      .flatMap((p) => [p.avg_overall_rating ?? 0])
+      .filter((v) => v > 0)
     return {
       responses: data.priority.reduce((s, p) => s + p.response_count, 0),
       mean: all.length ? (all.reduce((a, b) => a + b, 0) / all.length).toFixed(2) : '—',
@@ -136,7 +143,7 @@ export default function Reports({ resetKey }: Props) {
         p.priority,
       ]),
     )
-    toast.success('Assessment summary downloaded')
+    toast.success('Assessment Summary Exported', { description: 'CSV file downloaded.' })
   }
 
   function exportIndicatorBreakdown() {
@@ -145,7 +152,7 @@ export default function Reports({ resetKey }: Props) {
       ['Indicator', 'Average score (1-5)', 'Total ratings'],
       data.indicators.map((d) => [d.label, d.avg, d.n]),
     )
-    toast.success('Indicator breakdown downloaded')
+    toast.success('Indicator Breakdown Exported', { description: 'CSV file downloaded.' })
   }
 
   function exportConcerns() {
@@ -162,7 +169,7 @@ export default function Reports({ resetKey }: Props) {
         c.resolution_note ?? '',
       ]),
     )
-    toast.success('Concern report downloaded')
+    toast.success('Concern Report Exported', { description: 'CSV file downloaded.' })
   }
 
   function exportPriority() {
@@ -179,98 +186,180 @@ export default function Reports({ resetKey }: Props) {
         RECOMMENDATION[p.priority] ?? '',
       ]),
     )
-    toast.success('Priority list downloaded')
+    toast.success('Priority List Exported', { description: 'CSV file downloaded.' })
+  }
+
+  function handleRefresh() {
+    reload()
+    forceReset()
+    toast.success('Reports updated with latest database state')
   }
 
   if (loading) {
     return (
-      <div>
-        <PageTitle title="Facility Reports" />
-        <p className="py-16 text-center text-sm text-slate-500">Preparing reports…</p>
+      <div className="py-16 text-center text-sm text-slate-500 animate-pulse">
+        Compiling institutional facility reports…
       </div>
     )
   }
 
   return (
-    <div>
+    <div className="space-y-6">
       <PageTitle
-        title="Facility Reports"
-        subtitle="Downloadable summaries for planning and facility improvement. Use Print / Save as PDF for a formatted document."
+        title="Facility Reports & Analytics"
+        subtitle="Exportable summaries, indicator breakdowns, and priority rosters for administration planning and IT research reporting."
+        badge="Official Records"
+        action={
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleRefresh}
+            className="gap-1.5 shadow-2xs hover:bg-slate-100"
+          >
+            <RefreshCw className="size-3.5" />
+            Refresh
+          </Button>
+        }
       />
 
       <ErrorNote error={error} />
 
-      <div className="no-print mb-6 flex flex-wrap gap-2">
-        <Button onClick={exportAssessmentSummary}>
-          <Download />
-          Assessment summary (CSV)
+      {/* Action Toolbar for Exports */}
+      <div className="no-print flex flex-wrap items-center gap-2 p-3 rounded-2xl border border-slate-200 bg-white shadow-2xs animate-fade-in-up">
+        <Button
+          onClick={exportAssessmentSummary}
+          size="sm"
+          className="gap-1.5 bg-sky-600 hover:bg-sky-700 text-xs shadow-xs"
+        >
+          <FileSpreadsheet className="size-3.5" />
+          Assessment Summary (CSV)
         </Button>
-        <Button onClick={exportIndicatorBreakdown} variant="secondary">
-          <Download />
-          Indicator breakdown (CSV)
+        <Button
+          onClick={exportIndicatorBreakdown}
+          variant="secondary"
+          size="sm"
+          className="gap-1.5 text-xs"
+        >
+          <Download className="size-3.5" />
+          Indicator Breakdown (CSV)
         </Button>
-        <Button onClick={exportConcerns} variant="secondary">
-          <Download />
-          Concern report (CSV)
+        <Button
+          onClick={exportConcerns}
+          variant="secondary"
+          size="sm"
+          className="gap-1.5 text-xs"
+        >
+          <Download className="size-3.5" />
+          Concern Report (CSV)
         </Button>
-        <Button onClick={exportPriority} variant="secondary">
-          <Download />
-          Priority list (CSV)
+        <Button
+          onClick={exportPriority}
+          variant="secondary"
+          size="sm"
+          className="gap-1.5 text-xs"
+        >
+          <Download className="size-3.5" />
+          Priority List (CSV)
         </Button>
-        <Button variant="outline" onClick={() => window.print()}>
-          <Printer />
-          Print / Save as PDF
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => window.print()}
+          className="gap-1.5 ml-auto text-xs"
+        >
+          <Printer className="size-3.5" />
+          Print / Save PDF
         </Button>
       </div>
 
       <div className="print-area space-y-6">
-        <div className="print-only hidden" />
-
-        <div className="grid gap-4 sm:grid-cols-4">
-          <SummaryTile label="Total responses" value={String(totals.responses)} />
-          <SummaryTile label="Mean rating" value={`${totals.mean} / 5`} />
-          <SummaryTile label="High priority facilities" value={String(totals.high)} />
-          <SummaryTile label="Open concerns" value={String(totals.open)} />
+        {/* Print Cover Header */}
+        <div className="hidden print:block border-b pb-4 mb-4">
+          <h1 className="text-xl font-bold text-slate-900">Talisay City College</h1>
+          <h2 className="text-base font-semibold text-slate-700">TCC FacilityTrack · Institutional Facility Report</h2>
+          <p className="text-xs text-slate-500">Generated: {formatDate(GENERATED_ON)} · Academic Term Assessment</p>
         </div>
 
-        <Card className="break-inside-avoid">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <TrendingDown className="size-4 text-orange-600" />
-              Indicator breakdown
-            </CardTitle>
-            <p className="text-sm text-slate-600">
-              The indicators with the lowest averages are the strongest candidates for improvement.
+        {/* 4 Summary Stat Tiles */}
+        <div className="grid gap-4 sm:grid-cols-4 animate-fade-in-up">
+          <SummaryTile
+            icon={<ClipboardList className="size-4.5 text-sky-600" />}
+            label="Total Responses"
+            value={String(totals.responses)}
+            hint="Aggregated evaluations"
+          />
+          <SummaryTile
+            icon={<Sparkles className="size-4.5 text-emerald-600" />}
+            label="Mean Campus Rating"
+            value={`${totals.mean} / 5`}
+            hint="Across all rated facilities"
+          />
+          <SummaryTile
+            icon={<Flame className="size-4.5 text-rose-600" />}
+            label="High Priority Spaces"
+            value={String(totals.high)}
+            hint="Urgent intervention needed"
+          />
+          <SummaryTile
+            icon={<Wrench className="size-4.5 text-amber-600" />}
+            label="Active Concerns"
+            value={String(totals.open)}
+            hint="Under review or in repair"
+          />
+        </div>
+
+        {/* Horizontal Bar Chart: Indicator Breakdown */}
+        <Card className="break-inside-avoid rounded-2xl border-slate-200/90 shadow-xs">
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-base font-bold text-slate-900">
+                <TrendingDown className="size-4 text-orange-600" />
+                Indicator Breakdown & Satisfaction Deficits
+              </CardTitle>
+              <span className="text-xs font-semibold text-slate-500">Lowest scores first</span>
+            </div>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Identifies which specific facility dimensions (e.g. ventilation, lighting, computer health) have lowest averages.
             </p>
           </CardHeader>
           <CardContent>
             {data.indicators.length === 0 ? (
-              <p className="py-8 text-center text-sm text-slate-500">No ratings recorded yet.</p>
+              <p className="py-8 text-center text-xs text-slate-500">No ratings recorded yet.</p>
             ) : (
-              <div className="h-72">
+              <div className="h-72 w-full mt-2">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
                     data={data.indicators}
                     layout="vertical"
                     margin={{ top: 5, right: 30, left: 40, bottom: 5 }}
                   >
-                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e2e8f0" />
-                    <XAxis type="number" domain={[0, 5]} tick={{ fontSize: 11 }} />
+                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
+                    <XAxis
+                      type="number"
+                      domain={[0, 5]}
+                      ticks={[0, 1, 2, 3, 4, 5]}
+                      tick={{ fontSize: 11, fill: '#64748b' }}
+                    />
                     <YAxis
                       type="category"
                       dataKey="label"
                       width={140}
-                      tick={{ fontSize: 11, fill: '#475569' }}
+                      tick={{ fontSize: 11, fill: '#334155' }}
                     />
                     <Tooltip
-                      formatter={(v) => [`${String(v)} / 5`, 'Average']}
-                      contentStyle={{ fontSize: 12 }}
+                      formatter={(v) => [`${String(v)} / 5.0`, 'Average Score']}
+                      contentStyle={{
+                        borderRadius: '0.75rem',
+                        fontSize: '12px',
+                        border: '1px solid #e2e8f0',
+                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                      }}
                     />
                     <Bar dataKey="avg" radius={[0, 6, 6, 0]} maxBarSize={22}>
                       {data.indicators.map((d) => (
                         <Cell
                           key={d.key}
-                          fill={d.avg < 2.5 ? '#dc2626' : d.avg < 3.5 ? '#f97316' : '#16a34a'}
+                          fill={d.avg < 2.5 ? '#ef4444' : d.avg < 3.5 ? '#f97316' : '#10b981'}
                         />
                       ))}
                     </Bar>
@@ -281,132 +370,200 @@ export default function Reports({ resetKey }: Props) {
           </CardContent>
         </Card>
 
-        <Card className="break-inside-avoid">
-          <CardHeader>
-            <CardTitle className="text-base">1. Facility assessment summary</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Facility</TableHead>
-                  <TableHead>Responses</TableHead>
-                  <TableHead>Average</TableHead>
-                  <TableHead>Priority</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {ranked.map((p) => (
-                  <TableRow key={p.facility_id}>
-                    <TableCell className="font-medium">{p.name}</TableCell>
-                    <TableCell>{p.response_count}</TableCell>
-                    <TableCell className="tabular-nums">
-                      {ratingText(p.avg_overall_rating)}
-                    </TableCell>
-                    <TableCell>
-                      <span
-                        className={`rounded-full px-2 py-0.5 text-xs font-semibold ${priorityClasses(p.priority)}`}
-                      >
-                        {p.priority}
-                      </span>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-
-        <Card className="break-inside-avoid">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Target className="size-4 text-red-600" />
-              2. Priority list and recommended actions
+        {/* 1. Facility Assessment Summary */}
+        <Card className="break-inside-avoid rounded-2xl border-slate-200/90 shadow-xs overflow-hidden">
+          <CardHeader className="bg-slate-50/50 pb-3">
+            <CardTitle className="text-sm font-bold text-slate-900 flex items-center gap-2">
+              <BarChart3 className="size-4 text-sky-600" />
+              1. Facility Assessment Summary Table
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Priority</TableHead>
-                  <TableHead>Facility</TableHead>
-                  <TableHead>Basis</TableHead>
-                  <TableHead>Recommended action</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {ranked.map((p) => (
-                  <TableRow key={p.facility_id}>
-                    <TableCell>
-                      <span
-                        className={`rounded-full px-2 py-0.5 text-xs font-semibold ${priorityClasses(p.priority)}`}
-                      >
-                        {p.priority}
-                      </span>
-                    </TableCell>
-                    <TableCell className="whitespace-normal font-medium">{p.name}</TableCell>
-                    <TableCell className="whitespace-normal text-sm text-slate-600">
-                      {p.rationale}
-                    </TableCell>
-                    <TableCell className="whitespace-normal text-sm text-slate-600">
-                      {RECOMMENDATION[p.priority] ?? ''}
-                    </TableCell>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader className="bg-slate-50/80">
+                  <TableRow>
+                    <TableHead className="font-bold text-slate-700">Facility</TableHead>
+                    <TableHead className="font-bold text-slate-700">Category</TableHead>
+                    <TableHead className="font-bold text-slate-700 text-center">Responses</TableHead>
+                    <TableHead className="font-bold text-slate-700">Average Rating</TableHead>
+                    <TableHead className="font-bold text-slate-700">Priority</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {ranked.map((p) => (
+                    <TableRow key={p.facility_id} className="hover:bg-slate-50/60">
+                      <TableCell className="font-semibold text-slate-900">
+                        <div className="flex items-center gap-2">
+                          <span className="flex size-6 items-center justify-center rounded-md bg-sky-50 text-sky-600">
+                            {getFacilityCategoryIcon(p.category, 'size-3')}
+                          </span>
+                          <span>{p.name}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>{p.category}</TableCell>
+                      <TableCell className="text-center tabular-nums">{p.response_count}</TableCell>
+                      <TableCell className="font-bold tabular-nums">
+                        {ratingText(p.avg_overall_rating)}
+                      </TableCell>
+                      <TableCell>
+                        <span
+                          className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${priorityClasses(
+                            p.priority,
+                          )}`}
+                        >
+                          {getPriorityIcon(p.priority, 'size-3')}
+                          {p.priority}
+                        </span>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </CardContent>
         </Card>
 
-        <Card className="break-inside-avoid">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
+        {/* 2. Priority List & Recommendations */}
+        <Card className="break-inside-avoid rounded-2xl border-slate-200/90 shadow-xs overflow-hidden">
+          <CardHeader className="bg-slate-50/50 pb-3">
+            <CardTitle className="text-sm font-bold text-slate-900 flex items-center gap-2">
+              <Target className="size-4 text-rose-600" />
+              2. Priority Roster & Action Protocol
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader className="bg-slate-50/80">
+                  <TableRow>
+                    <TableHead className="font-bold text-slate-700">Priority</TableHead>
+                    <TableHead className="font-bold text-slate-700">Facility</TableHead>
+                    <TableHead className="font-bold text-slate-700">Analytical Basis</TableHead>
+                    <TableHead className="font-bold text-slate-700">Recommended Next Steps</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {ranked.map((p) => (
+                    <TableRow key={p.facility_id} className="hover:bg-slate-50/60">
+                      <TableCell>
+                        <span
+                          className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${priorityClasses(
+                            p.priority,
+                          )}`}
+                        >
+                          {getPriorityIcon(p.priority, 'size-3')}
+                          {p.priority}
+                        </span>
+                      </TableCell>
+                      <TableCell className="font-semibold text-slate-900 whitespace-normal">
+                        {p.name}
+                      </TableCell>
+                      <TableCell className="whitespace-normal text-xs text-slate-600">
+                        {p.rationale}
+                      </TableCell>
+                      <TableCell className="whitespace-normal text-xs text-slate-700 font-medium">
+                        {RECOMMENDATION[p.priority] ?? ''}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* 3. Concern Tickets Roster */}
+        <Card className="break-inside-avoid rounded-2xl border-slate-200/90 shadow-xs overflow-hidden">
+          <CardHeader className="bg-slate-50/50 pb-3">
+            <CardTitle className="text-sm font-bold text-slate-900 flex items-center gap-2">
               <FileSpreadsheet className="size-4 text-sky-600" />
-              3. Concern report ({data.concerns.length} total)
+              3. Concern Log ({data.concerns.length} Recorded Tickets)
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Reported</TableHead>
-                  <TableHead>Facility</TableHead>
-                  <TableHead>Severity</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {data.concerns.slice(0, 40).map((c) => (
-                  <TableRow key={c.id}>
-                    <TableCell>{formatDate(c.created_at)}</TableCell>
-                    <TableCell>{c.facilities?.name ?? '—'}</TableCell>
-                    <TableCell>{c.severity}</TableCell>
-                    <TableCell>{c.status}</TableCell>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader className="bg-slate-50/80">
+                  <TableRow>
+                    <TableHead className="font-bold text-slate-700">Reported</TableHead>
+                    <TableHead className="font-bold text-slate-700">Facility</TableHead>
+                    <TableHead className="font-bold text-slate-700">Category</TableHead>
+                    <TableHead className="font-bold text-slate-700">Severity</TableHead>
+                    <TableHead className="font-bold text-slate-700">Status</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            {data.concerns.length > 40 && (
-              <p className="mt-2 text-xs text-slate-500">
-                Showing the 40 most recent. Export the CSV for the full list.
-              </p>
+                </TableHeader>
+                <TableBody>
+                  {data.concerns.slice(0, 30).map((c) => (
+                    <TableRow key={c.id} className="hover:bg-slate-50/60 text-xs">
+                      <TableCell>{formatDate(c.created_at)}</TableCell>
+                      <TableCell className="font-medium text-slate-800">
+                        {c.facilities?.name ?? '—'}
+                      </TableCell>
+                      <TableCell>{c.category ?? 'Other'}</TableCell>
+                      <TableCell>
+                        <span
+                          className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${priorityClasses(
+                            c.severity,
+                          )}`}
+                        >
+                          {getPriorityIcon(c.severity, 'size-3')}
+                          {c.severity}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <span
+                          className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${priorityClasses(
+                            c.status === 'Resolved' ? 'Low' : c.status === 'Reported' ? 'Moderate' : 'High',
+                          )}`}
+                        >
+                          {getStatusIcon(c.status, 'size-3')}
+                          {c.status}
+                        </span>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+            {data.concerns.length > 30 && (
+              <div className="p-3 text-center text-xs text-slate-400 border-t bg-slate-50/40">
+                Displaying 30 most recent tickets. Use the "Concern Report (CSV)" button above for complete historical export.
+              </div>
             )}
           </CardContent>
         </Card>
 
-        <p className="text-center text-xs text-slate-500">
-          TCC FacilityTrack · Talisay City College · Generated {formatDate(GENERATED_ON)}
+        {/* Print document footer */}
+        <p className="text-center text-xs text-slate-400 print:text-black">
+          TCC FacilityTrack · Talisay City College · Campus Facility Report · {formatDate(GENERATED_ON)}
         </p>
       </div>
     </div>
   )
 }
 
-function SummaryTile({ label, value }: { label: string; value: string }) {
+function SummaryTile({
+  icon,
+  label,
+  value,
+  hint,
+}: {
+  icon: React.ReactNode
+  label: string
+  value: string
+  hint: string
+}) {
   return (
-    <div className="rounded-xl border bg-white p-4 text-center shadow-sm">
-      <div className="text-xs text-slate-500">{label}</div>
-      <div className="mt-1 text-2xl font-bold text-slate-900">{value}</div>
+    <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-2xs hover:shadow-xs transition-all">
+      <div className="flex items-center justify-between text-xs text-slate-500">
+        <span className="font-semibold uppercase tracking-wider text-[11px]">{label}</span>
+        <div className="flex size-7 items-center justify-center rounded-lg bg-slate-50">
+          {icon}
+        </div>
+      </div>
+      <div className="mt-2 text-2xl font-extrabold text-slate-900 tracking-tight">{value}</div>
+      <div className="mt-1 text-[11px] text-slate-400 font-medium">{hint}</div>
     </div>
   )
 }

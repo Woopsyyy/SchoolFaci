@@ -4,20 +4,25 @@ import { CircleCheckIcon, InfoIcon, TriangleAlertIcon, OctagonXIcon, Loader2Icon
 const Toaster = ({ ...props }: ToasterProps) => {
   return (
     <Sonner
-      position="top-center"
+      position="bottom-right"
+      richColors
+      closeButton
       icons={{
-        success: <CircleCheckIcon className="size-4" />,
-        info: <InfoIcon className="size-4" />,
-        warning: <TriangleAlertIcon className="size-4" />,
-        error: <OctagonXIcon className="size-4" />,
-        loading: <Loader2Icon className="size-4 animate-spin" />,
+        success: <CircleCheckIcon className="size-4.5 text-emerald-500" />,
+        info: <InfoIcon className="size-4.5 text-sky-500" />,
+        warning: <TriangleAlertIcon className="size-4.5 text-amber-500" />,
+        error: <OctagonXIcon className="size-4.5 text-red-500" />,
+        loading: <Loader2Icon className="size-4.5 animate-spin text-sky-600" />,
+      }}
+      toastOptions={{
+        className: 'rounded-xl border shadow-lg font-sans text-xs sm:text-sm',
       }}
       style={
         {
-          "--normal-bg": "var(--popover)",
-          "--normal-text": "var(--popover-foreground)",
-          "--normal-border": "var(--border)",
-          "--border-radius": "var(--radius)",
+          "--normal-bg": "#ffffff",
+          "--normal-text": "#0f172a",
+          "--normal-border": "#e2e8f0",
+          "--border-radius": "0.75rem",
         } as React.CSSProperties
       }
       {...props}
